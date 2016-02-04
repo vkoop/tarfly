@@ -13,6 +13,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Lazy
 @Component
@@ -22,7 +25,6 @@ public class Client {
 
     @Value("${port}")
     public int port;
-
 
     @Value("${host}")
     public String host;
@@ -41,28 +43,17 @@ public class Client {
 
             TarEntry entry;
             while ((entry = tarIn.getNextEntry()) != null) {
-                int count;
-                byte data[] = new byte[2048];
+                Path newFile = Paths.get(destFolder, entry.getName());
+                Path parentFile = newFile.getParent();
 
-                File f = new File(destFolder + "/" + entry.getName());
-                File parentFile = f.getParentFile();
                 if(parentFile != null){
-                    parentFile.mkdirs();
-                }
-                f.createNewFile();
-
-                FileOutputStream fos = new FileOutputStream(f);
-                BufferedOutputStream dest = new BufferedOutputStream(fos);
-
-                while ((count = tarIn.read(data)) != -1) {
-                    dest.write(data, 0, count);
+                    Files.createDirectories(parentFile);
                 }
 
-                dest.flush();
-                dest.close();
+                Files.createFile(newFile);
+                Files.copy(tarIn, parentFile);
 
-                log.info("Copied file: {}" , f);
-
+                log.info("Copied file: {}" , newFile);
             }
         } catch (IOException e) {
             e.printStackTrace();

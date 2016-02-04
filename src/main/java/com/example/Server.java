@@ -49,9 +49,8 @@ public class Server {
                             log.info("start adding file: {}", path);
                             TarEntry entry = new TarEntry(path.toFile(), path.toString());
                             tarOut.putNextEntry(entry);
-                            InputStream inputStream = Files.newInputStream(path);
-                            IOUtils.copy(inputStream, tarOut);
-                            inputStream.close();
+
+                            Files.copy(path, tarOut);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
