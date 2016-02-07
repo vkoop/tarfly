@@ -8,14 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 
 @Lazy
 @Component
@@ -43,6 +38,7 @@ public class Client {
 
             TarEntry entry;
             while ((entry = tarIn.getNextEntry()) != null) {
+
                 Path newFile = Paths.get(destFolder, entry.getName());
                 Path parentFile = newFile.getParent();
 
@@ -50,10 +46,14 @@ public class Client {
                     Files.createDirectories(parentFile);
                 }
 
-                Files.createFile(newFile);
-                Files.copy(tarIn, parentFile);
+                try{
+                    Files.createFile(newFile);
+                    Files.copy(tarIn, newFile, StandardCopyOption.REPLACE_EXISTING);
+                    log.info("Copied file: {}" , newFile);
+                } catch(FileAlreadyExistsException ex){
+                    log.info("File already exists: ", newFile.toString());
+                }
 
-                log.info("Copied file: {}" , newFile);
             }
         } catch (IOException e) {
             e.printStackTrace();
