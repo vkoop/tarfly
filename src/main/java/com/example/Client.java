@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.*;
 
 @Lazy
@@ -49,6 +52,19 @@ public class Client {
                 try{
                     Files.createFile(newFile);
                     Files.copy(tarIn, newFile, StandardCopyOption.REPLACE_EXISTING);
+
+                    BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(newFile.toFile()));
+                    byte data[] = new byte[2048];
+                    int count;
+
+                    while((count = tarIn.read(data)) != -1) {
+                        bufferedOutputStream.write(data, 0, count);
+                    }
+
+                    bufferedOutputStream.flush();
+                    bufferedOutputStream.close();
+
+
                     log.info("Copied file: {}" , newFile);
                 } catch(FileAlreadyExistsException ex){
                     log.info("File already exists: ", newFile.toString());
