@@ -1,4 +1,4 @@
-package com.example;
+package de.vkoop.tarfly;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;

@@ -1,4 +1,4 @@
-package com.example;
+package de.vkoop.tarfly;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

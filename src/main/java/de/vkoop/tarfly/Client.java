@@ -1,4 +1,4 @@
-package com.example;
+package de.vkoop.tarfly;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -8,11 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.*;
 
 @Lazy
@@ -64,10 +63,9 @@ public class Client {
                     bufferedOutputStream.flush();
                     bufferedOutputStream.close();
 
-
                     log.info("Copied file: {}" , newFile);
                 } catch(FileAlreadyExistsException ex){
-                    log.info("File already exists: ", newFile.toString());
+                    log.info("File already exists: {}", newFile.toString());
                 }
 
             }
