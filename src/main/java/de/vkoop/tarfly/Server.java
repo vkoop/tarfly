@@ -1,9 +1,10 @@
 package de.vkoop.tarfly;
 
 
-import lombok.extern.slf4j.Slf4j;
 import org.kamranzafar.jtar.TarEntry;
 import org.kamranzafar.jtar.TarOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -18,69 +19,66 @@ import java.nio.file.Paths;
 
 @Lazy
 @Component
-@Slf4j
 public class Server {
-
-    @Value("${port}")
-    int port;
+    private final Logger log = LoggerFactory.getLogger(Server.class);
 
     @Value("${sourceFolder}")
-    String sf;
+    private String sourceFolderName;
+
+    @Value("${port}")
+    private int port;
 
     public void start() {
 
-        log.info("Server port:{} sourceFolder:{}", port, sf);
 
-        int retryCount = 3;
+        log.info("Server port:{} sourceFolder:{}", port, sourceFolderName);
 
+        final int maxRetryCount = 3;
 
-
+        //setup resources
         try (
                 ServerSocket serverSocket = new ServerSocket(port);
                 Socket clientSocket = serverSocket.accept();
 
                 TarOutputStream tarOut = new TarOutputStream(
-                        new BufferedOutputStream(
-                            clientSocket.getOutputStream()));
-
+                        new BufferedOutputStream(clientSocket.getOutputStream()))
 
         ) {
-            Path sourcePath = Paths.get(sf);
+            final Path sourcePath = Paths.get(sourceFolderName);
 
             Files.walk(sourcePath)
                     .filter(Files::isRegularFile)
-                    .forEach(path -> {
-                        int currentRetry = 0;
-                        boolean retry = true;
+                    .forEach(filePath -> {
+                        int currentRetryCount = 0;
+                        boolean shouldRetry = true;
 
-                        while(retry){
-                            if(currentRetry < retryCount){
-                                String filename = path.toString();
-                                TarEntry entry = new TarEntry(path.toFile(), filename);
+                        while (shouldRetry) {
+                            if (currentRetryCount < maxRetryCount) {
+                                final String filename = filePath.toString();
+                                final TarEntry entry = new TarEntry(filePath.toFile(), filename);
                                 try {
-                                    log.info("Add file {}",filename);
+                                    log.info("Add file {}", filename);
                                     tarOut.putNextEntry(entry);
-                                    Files.copy(path, tarOut);
-                                    retry = false;
-                                } catch (IOException e) {
-                                    log.error("Failed to add file to tar: {} .Will retry to write.", path ,e);
+                                    Files.copy(filePath, tarOut);
+                                    shouldRetry = false;
+                                } catch (final IOException e) {
+                                    log.error("Failed to add file to tar: {} .Will retry to write.", filePath, e);
 
-                                    currentRetry++;
+                                    currentRetryCount++;
                                 }
                             } else {
-                                throw new SocketClosedException("Socket closed?");
+                                final SocketClosedException socketClosedException = new SocketClosedException("Socket closed?");
+                                log.error("Problems with the connection occured.", socketClosedException);
+                                throw socketClosedException;
                             }
                         }
                     });
 
             log.info("Finished copy process");
-        } catch (IOException e) {
-
-            log.error("Some kind of socket error",e);
-        } catch (SocketClosedException e){
+        } catch (final IOException e) {
+            log.error("Some kind of socket error", e);
+        } catch (final SocketClosedException e) {
             log.error("Socket closed?", e);
         }
     }
-
-
 }

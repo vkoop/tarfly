@@ -8,26 +8,29 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
+/**
+ * Starter class
+ */
 @SpringBootApplication
 public class AppStarter {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AppStarter.class, args);
-	}
+    public static void main(final String[] args) {
+        SpringApplication.run(AppStarter.class, args);
+    }
 
-	@Autowired
-	ApplicationContext context;
+    @Autowired
+    private ApplicationContext context;
 
-	@Autowired
-	@Bean
-	public CommandLineRunner getRunner(ApplicationArguments applicationArguments){
-		return (args)->{
-			if(applicationArguments.containsOption("server")){
-				context.getBean(Server.class).start();
-			} else if(applicationArguments.containsOption("client")){
-				context.getBean(Client.class).start();
-			}
-		};
-	}
+    @Autowired
+    @Bean
+    public CommandLineRunner getRunner(final ApplicationArguments applicationArguments) {
+        return (args) -> {
+            if (applicationArguments.containsOption("server")) {
+                context.getBean(Server.class).start();
+            } else if (applicationArguments.containsOption("client")) {
+                context.getBean(Client.class).start();
+            }
+        };
+    }
 
 }
